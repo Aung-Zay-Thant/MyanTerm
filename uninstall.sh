@@ -3,7 +3,13 @@
 set -uo pipefail
 
 ZSH_DIR="$HOME/.local/myanterm-zsh"
-term() { osascript -e "tell application \"Terminal\" to $1" 2>/dev/null; }
+PREFS=com.apple.Terminal
+if [ -n "${MYANTERM_TEST_PREFS:-}" ]; then   # test mode: don't touch Terminal or its settings
+    PREFS=$MYANTERM_TEST_PREFS
+    term() { printf 'test: osascript %s\n' "$1" >&2; }
+else
+    term() { osascript -e "tell application \"Terminal\" to $1" 2>/dev/null; }
+fi
 
 # default/startup profile back to Basic if they point at MyanTerm
 [ "$(term 'get name of default settings')" = MyanTerm ] && term 'set default settings to settings set "Basic"' >/dev/null
@@ -17,12 +23,11 @@ fi
 rm -f "$HOME/Library/Fonts/MyanTerm-Regular.ttf" "$HOME/Library/Fonts/MyanTerm-Bold.ttf"
 echo "Removed the MyanTerm fonts"
 
-if [ -d "$ZSH_DIR" ]; then
-    if [ "$(defaults read com.apple.Terminal Shell 2>/dev/null)" = "$ZSH_DIR/bin/zsh" ]; then
-        echo "Terminal > Settings > General > \"Shells open with\" points at $ZSH_DIR/bin/zsh;"
-        echo "set it back to \"Default login shell\", then run:  rm -rf \"$ZSH_DIR\""
-    else
-        rm -rf "$ZSH_DIR" && echo "Removed $ZSH_DIR"
-    fi
+if [ "$(defaults read "$PREFS" Shell 2>/dev/null)" = "$ZSH_DIR/bin/zsh" ]; then
+    defaults delete "$PREFS" Shell \
+        && echo "Terminal opens windows with your login shell again"
 fi
-echo "Windows that are still open keep running until you close them."
+if [ -d "$ZSH_DIR" ]; then
+    rm -rf "$ZSH_DIR" && echo "Removed $ZSH_DIR"
+fi
+echo "Quit Terminal (Command-Q) and open it again to finish."

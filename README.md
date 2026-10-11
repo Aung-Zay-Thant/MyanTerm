@@ -8,21 +8,19 @@ macOS Terminal မှာ မြန်မာစာကို မှန်မှန
 
 ## Install
 
-1. Download `MyanTerm-1.2.2.zip` from [Releases](../../releases) and unzip it.
+1. Download `MyanTerm-1.3.0.zip` from [Releases](../../releases) and unzip it.
 2. Double-click `Install MyanTerm.command`. The first time, macOS may block it: right-click it, choose Open, then Open again.
-   Or, in Terminal: `cd MyanTerm-1.2.2 && ./install.sh`
+   Or, in Terminal: `cd MyanTerm-1.3.0 && ./install.sh`
 
 The installer:
 
 - copies `MyanTerm-Regular.ttf` and `MyanTerm-Bold.ttf` into `~/Library/Fonts`
 - copies a ready-made zsh into `~/.local/myanterm-zsh` (see below)
 - adds a Terminal profile named **MyanTerm** that pins everything Burmese depends on: MyanTerm 13 pt, standard character spacing, UTF-8 encoding and locale, and that zsh as the login shell; your other profiles are not changed
-- asks whether new Terminal windows should use MyanTerm (Terminal > Settings > Profiles changes this later)
+- asks whether every Terminal window should use MyanTerm. If yes, MyanTerm becomes the default profile and Terminal > Settings > General > "Shells open with" is set to that zsh, so typing Burmese works in windows of any profile (both can be changed back in Terminal > Settings)
 - checks that your Terminal measures Burmese the way the font expects
 
-Open a new window with the MyanTerm profile (Shell > New Window > MyanTerm) to use it.
-
-Upgrading from an older MyanTerm: quit Terminal (Command-Q) and open it again after installing. Terminal keeps the old font in memory until it restarts.
+Then quit Terminal (Command-Q) and open it again. Windows that were open during the install keep the old shell, and after an upgrade Terminal keeps the old font in memory, until it restarts.
 
 Options: `--default` / `--no-default` (skip the question), `--no-zsh` (font and profile only).
 
@@ -32,7 +30,9 @@ To remove everything: `./uninstall.sh`.
 
 The font fixes how Burmese is drawn. Typing and editing Burmese in a command line also depends on the shell: zsh counts the spacing vowel signs and medials (ာ ေ ျ ြ း) as zero columns wide while Terminal gives each one a column, so with the stock zsh the cursor drifts and letters are left behind while you type.
 
-The installer therefore sets up zsh 5.9.2 built with a small patch ([zsh/](zsh)) that makes zsh use Terminal's widths. It is one universal file (Apple silicon and Intel, macOS 11 or later), needs no Xcode tools, reads the same `/etc/zshrc` and your `~/.zshrc` as `/bin/zsh`, and is only used by the MyanTerm profile. Your login shell and `$SHELL` stay `/bin/zsh`. If your login shell is not zsh, the installer skips this part.
+The installer therefore sets up zsh 5.9.2 built with a small patch ([zsh/](zsh)) that makes zsh use Terminal's widths. It is one universal file (Apple silicon and Intel, macOS 11 or later), needs no Xcode tools and reads the same `/etc/zshrc` and your `~/.zshrc` as `/bin/zsh`. Terminal runs it in MyanTerm windows and, if you chose to use MyanTerm in every window, in all windows. Your login shell and `$SHELL` stay `/bin/zsh`. If your login shell is not zsh, the installer skips this part.
+
+If typed Burmese repeats letters or piles up, that window is running `/bin/zsh`. To check a window, run `s=ကျေး; echo ${(m)#s}`: it prints 4 with MyanTerm's zsh and 1 with `/bin/zsh`.
 
 ## How it works
 

@@ -1,16 +1,18 @@
 #!/bin/bash
 # MyanTerm installer: natural Burmese text in macOS Terminal.app.
 #
-#   ./install.sh                 install, and ask whether new windows should use MyanTerm
-#   ./install.sh --default       ...and make MyanTerm the default profile without asking
-#   ./install.sh --no-default    ...and leave the default profile alone
+#   ./install.sh                 install, and ask whether every Terminal window should use MyanTerm
+#   ./install.sh --default       ...and do that without asking
+#   ./install.sh --no-default    ...and only add the MyanTerm profile
 #   ./install.sh --no-zsh        don't set up the zsh that fixes typing Burmese at the prompt
 #
 # What it changes:
 #   ~/Library/Fonts/MyanTerm-Regular.ttf, MyanTerm-Bold.ttf   the fonts
 #   ~/.local/myanterm-zsh/bin/zsh                              zsh 5.9.2 with Terminal's Burmese widths
 #   Terminal profile "MyanTerm"                                MyanTerm 13pt, starts that zsh as a login shell
-# Your other Terminal profiles, your login shell and your dotfiles are not changed.
+# If you choose to use MyanTerm in every window (the default answer), MyanTerm also becomes the
+# default profile and Terminal > Settings > General > "Shells open with" is set to that zsh, so
+# typing Burmese works in windows of every profile. Your login shell and dotfiles are not changed.
 # Undo everything with ./uninstall.sh.
 set -euo pipefail
 
@@ -26,13 +28,19 @@ for arg in "$@"; do
         --no-default) MAKE_DEFAULT=no ;;
         --no-zsh) WITH_ZSH=0 ;;
         --with-zsh) WITH_ZSH=1 ;;   # accepted for compatibility with 1.0
-        -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
         *) echo "unknown option: $arg" >&2; exit 2 ;;
     esac
 done
 
 say() { printf '%s\n' "$*"; }
-term() { osascript -e "tell application \"Terminal\" to $1" 2>/dev/null; }
+PREFS=com.apple.Terminal
+if [ -n "${MYANTERM_TEST_PROFILE_OUT:-}" ]; then   # test mode: don't touch Terminal or its settings
+    PREFS=${MYANTERM_TEST_PREFS:?test mode needs MYANTERM_TEST_PREFS}
+    term() { printf 'test: osascript %s\n' "$1" >&2; }
+else
+    term() { osascript -e "tell application \"Terminal\" to $1" 2>/dev/null; }
+fi
 has_profile() { term 'get name of settings sets' | tr ',' '\n' | sed 's/^ *//' | grep -qx "$1"; }
 
 [ "$(uname -s)" = Darwin ] || { say "MyanTerm is for macOS Terminal.app."; exit 1; }
@@ -88,28 +96,47 @@ if [ -z "${MYANTERM_TEST_PROFILE_OUT:-}" ] && has_profile MyanTerm; then
     term 'delete settings set "MyanTerm"' >/dev/null || true
 fi
 if [ -n "${MYANTERM_TEST_PROFILE_OUT:-}" ]; then   # test hook: write the profile, don't import it
-    cp "$profile" "$MYANTERM_TEST_PROFILE_OUT"; MAKE_DEFAULT=no
+    cp "$profile" "$MYANTERM_TEST_PROFILE_OUT"
 else
     open "$profile"      # Terminal imports the profile and opens one window with it
     for _ in $(seq 1 20); do has_profile MyanTerm && break; sleep 0.5; done
 fi
 say "Added the Terminal profile \"MyanTerm\" (MyanTerm 13pt$([ "$zsh_ok" = 1 ] && printf ', with the fixed zsh'))"
 
-# 4. default profile
+# 4. every window: MyanTerm as the default profile, and the fixed zsh for all profiles
+#    (windows of other profiles would otherwise run /bin/zsh, which garbles Burmese while typing)
 if [ "$MAKE_DEFAULT" = ask ]; then
     if [ "$was_default" = yes ]; then
         MAKE_DEFAULT=yes
     elif [ -t 0 ]; then
-        read -r -p "Use MyanTerm for new Terminal windows? [Y/n] " answer
+        read -r -p "Use MyanTerm in every Terminal window? [Y/n] " answer
         case "$answer" in [nN]*) MAKE_DEFAULT=no ;; *) MAKE_DEFAULT=yes ;; esac
     else
         MAKE_DEFAULT=no
     fi
 fi
+shell_changed=no
+every_window=no
 if [ "$MAKE_DEFAULT" = yes ]; then
     term 'set default settings to settings set "MyanTerm"' >/dev/null
     term 'set startup settings to settings set "MyanTerm"' >/dev/null
     say "MyanTerm is now the default profile (Terminal > Settings > Profiles to change it)"
+    if [ "$zsh_ok" = 1 ]; then
+        current=$(defaults read "$PREFS" Shell 2>/dev/null || true)
+        case "$current" in
+            "$ZSH_BIN") every_window=yes ;;
+            ""|/bin/zsh)
+                defaults write "$PREFS" Shell -string "$ZSH_BIN"
+                shell_changed=yes; every_window=yes
+                say "Terminal now opens every window with $ZSH_BIN"
+                say "  (Terminal > Settings > General > \"Shells open with\" changes this back)"
+                ;;
+            *)
+                say "Note: Terminal is set to open windows with $current, so typing Burmese"
+                say "works only in MyanTerm windows (Shell > New Window > MyanTerm)."
+                ;;
+        esac
+    fi
 fi
 
 # 5. check that this Terminal measures Burmese the way the font expects
@@ -127,10 +154,17 @@ if [ "${TERM_PROGRAM:-}" = Apple_Terminal ] && [ -t 0 ] && [ -t 1 ]; then
     fi
 fi
 
-if [ "$upgrade" = yes ]; then
+if [ "$upgrade" = yes ] || [ "$shell_changed" = yes ]; then
     say ""
-    say "IMPORTANT: an older MyanTerm was replaced. Terminal keeps the old font in memory until it"
-    say "restarts, so quit Terminal now (Terminal > Quit Terminal, or Command-Q) and open it again."
+    say "IMPORTANT: quit Terminal now (Terminal > Quit Terminal, or Command-Q) and open it again."
+    [ "$upgrade" = yes ] && say "Terminal keeps the old MyanTerm font in memory until it restarts."
+    [ "$shell_changed" = yes ] && say "Windows that are already open keep running /bin/zsh until then."
     say ""
 fi
-say "Done. Burmese works in new windows that use the MyanTerm profile (Shell > New Window > MyanTerm)."
+if [ "$every_window" = yes ]; then
+    say "Done. Burmese works in every Terminal window."
+elif [ "$MAKE_DEFAULT" = yes ]; then
+    say "Done. New Terminal windows use MyanTerm."
+else
+    say "Done. Burmese works in windows that use the MyanTerm profile (Shell > New Window > MyanTerm)."
+fi
