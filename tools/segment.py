@@ -50,12 +50,19 @@ def clusters(text):
         yield text[pos:], False
 
 
-def cells(s, spacing_marks=True):
+def cells(s, terminal26=False):
     """Cells Terminal.app draws s in: non-spacing marks take 0 cells, everything else 1.
-    Terminal before macOS 27 draws the spacing vowel signs and medials (Mc: ာ ေ ျ ြ း ...)
-    with no width either (it still gives them a cell for the cursor): spacing_marks=False."""
-    zero = ("Mn",) if spacing_marks else ("Mn", "Mc")
-    return sum(0 if unicodedata.category(ch) in zero else 1 for ch in s)
+    Terminal before macOS 27 (terminal26=True) still gives every character but the
+    non-spacing marks a cell for the cursor, but draws the row in macOS's composed
+    character units: the spacing vowel signs and medials (Mc: ာ ေ ျ ြ း ...) and a
+    consonant stacked under another (after ္, as in င်္ဂ, ဒ္ဒ) take no width there."""
+    n, prev = 0, ""
+    for ch in s:
+        cat = unicodedata.category(ch)
+        if not (cat == "Mn" or (terminal26 and (cat == "Mc" or prev == "\u1039"))):
+            n += 1
+        prev = ch
+    return n
 
 
 if __name__ == "__main__":

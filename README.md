@@ -8,9 +8,9 @@ macOS Terminal မှာ မြန်မာစာကို မှန်မှန
 
 ## Install
 
-1. Download `MyanTerm-1.4.0.zip` from [Releases](../../releases) and unzip it.
+1. Download `MyanTerm-1.4.1.zip` from [Releases](../../releases) and unzip it.
 2. Double-click `Install MyanTerm.command`. The first time, macOS may block it: right-click it, choose Open, then Open again.
-   Or, in Terminal: `cd MyanTerm-1.4.0 && ./install.sh`
+   Or, in Terminal: `cd MyanTerm-1.4.1 && ./install.sh`
 
 The installer:
 
@@ -48,7 +48,7 @@ MyanTerm works with the grid instead:
 
 ## macOS 26 and earlier
 
-Terminal on macOS 26 (Terminal 470) counts the spacing vowel signs and medials (ာ ေ ျ ြ း) as one column each for the cursor and line wrapping, like macOS 27, but draws the text as if they had no width. Burmese then gets about two thirds of the room, and the normal MyanTerm draws syllables on top of each other.
+Terminal on macOS 26 (Terminal 470) counts the spacing vowel signs and medials (ာ ေ ျ ြ း) as one column each for the cursor and line wrapping, like macOS 27, but draws the text as if they had no width, and the same for a consonant stacked under another (after ္, as in င်္ဂ or ဒ္ဒ). Burmese then gets about two thirds of the room, and the normal MyanTerm draws syllables on top of each other.
 
 On those Macs the installer uses a second edition of the font (`fonts/macos26`), built for that drawing: the same syllables and spacing logic, with Burmese about 7% smaller and 30% narrower so it fits. What the font cannot change is the cursor. Terminal still places it as if the marks took a column, so in a line with Burmese the cursor sits a few columns to the right of the text it follows (one column per ာ ေ ျ ြ း before it). Typing and editing still work correctly. After upgrading to macOS 27, run the installer again to get the normal edition.
 

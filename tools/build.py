@@ -27,8 +27,8 @@ So this font:
     unusual sequences that aren't in the syllable list.
 
 Terminal before macOS 27 (Terminal 470 on macOS 26) still gives spacing vowel signs and
-medials (ာ ေ ျ ြ း) a cell for the cursor, but draws the row as if they had no width, so
-Burmese gets about two thirds of the room. MYANTERM_EDITION=26 builds the edition for those
+medials (ာ ေ ျ ြ း) a cell for the cursor, but draws the row as if they, and a consonant
+stacked under another (after ္), had no width, so Burmese gets about two thirds of the room. MYANTERM_EDITION=26 builds the edition for those
 Terminals: cells counted that way, and Burmese drawn smaller and narrower to fit.
 
 usage: [MYANTERM_EDITION=26] build.py MONO.ttf MYANMAR.ttf CLUSTERS.txt OUT.ttf FAMILY
@@ -347,7 +347,7 @@ for line in open(clusters_path, encoding="utf-8"):
     if used + len(raw_needed) + len(LEVELS) > budget:
         print("glyph budget reached; dropped the rest of the list from", repr(s))
         break
-    n = cells(s, spacing_marks=not LEGACY)
+    n = cells(s, terminal26=LEGACY)
     if n == 0:
         continue
     if len(s) == 1 and unicodedata.category(s) not in ("Lo", "Nd", "Po", "So"):
@@ -775,7 +775,7 @@ style = "Bold" if "Bold" in mono_path else "Regular"
 ps = family.replace(" ", "") + "-" + style
 name = merged["name"]
 name.names = [n for n in name.names if n.nameID in (7, 8, 9, 11, 12)]
-VERSION = "1.400" if LEGACY else "1.210"
+VERSION = "1.410" if LEGACY else "1.210"
 COPYRIGHT = ("Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic, "
              "https://github.com/notofonts/myanmar). MyanTerm modifications copyright 2026 the MyanTerm authors.")
 DESCRIPTION = ("Monospace font that renders Burmese (Myanmar script) naturally in macOS Terminal.app"
