@@ -8,24 +8,29 @@ macOS Terminal မှာ မြန်မာစာကို မှန်မှန
 
 ## Install
 
-1. Download `MyanTerm-1.0.zip` from [Releases](../../releases) and unzip it.
+1. Download `MyanTerm-1.1.zip` from [Releases](../../releases) and unzip it.
 2. Double-click `Install MyanTerm.command`. The first time, macOS may block it: right-click it, choose Open, then Open again.
-   Or, in Terminal: `cd MyanTerm-1.0 && ./install.sh`
+   Or, in Terminal: `cd MyanTerm-1.1 && ./install.sh`
 
 The installer:
 
 - copies `MyanTerm-Regular.ttf` and `MyanTerm-Bold.ttf` into `~/Library/Fonts`
-- adds a Terminal profile named **MyanTerm** (MyanTerm 13 pt); existing profiles are not changed
-- asks whether new Terminal windows should use it (Terminal > Settings > Profiles changes this later)
+- copies a ready-made zsh into `~/.local/myanterm-zsh` (see below)
+- adds a Terminal profile named **MyanTerm** (MyanTerm 13 pt) that starts that zsh as a login shell; your other profiles are not changed
+- asks whether new Terminal windows should use MyanTerm (Terminal > Settings > Profiles changes this later)
 - checks that your Terminal measures Burmese the way the font expects
 
-Options: `--default` / `--no-default` (skip the question), `--with-zsh` (see below).
+Open a new window with the MyanTerm profile (Shell > New Window > MyanTerm) to use it.
+
+Options: `--default` / `--no-default` (skip the question), `--no-zsh` (font and profile only).
 
 To remove everything: `./uninstall.sh`.
 
-## Editing Burmese at the zsh prompt (optional)
+## Typing Burmese at the prompt
 
-The font fixes how Burmese is drawn. Typing and editing Burmese in a command line is a separate problem: zsh counts the spacing vowel signs and medials (ာ ေ ျ ြ း) as zero columns wide while Terminal gives each one a column, so the cursor drifts. `./install.sh --with-zsh` builds zsh 5.9.2 from the official source with a small patch ([zsh/](zsh)) that makes zsh use Terminal's widths, installs it into `~/.local/myanterm-zsh`, and prints how to select it in Terminal > Settings > General > "Shells open with". Your `.zshrc` and other settings are used as before. Building needs the Xcode Command Line Tools (`xcode-select --install`).
+The font fixes how Burmese is drawn. Typing and editing Burmese in a command line also depends on the shell: zsh counts the spacing vowel signs and medials (ာ ေ ျ ြ း) as zero columns wide while Terminal gives each one a column, so with the stock zsh the cursor drifts and letters are left behind while you type.
+
+The installer therefore sets up zsh 5.9.2 built with a small patch ([zsh/](zsh)) that makes zsh use Terminal's widths. It is one universal file (Apple silicon and Intel, macOS 11 or later), needs no Xcode tools, reads the same `/etc/zshrc` and your `~/.zshrc` as `/bin/zsh`, and is only used by the MyanTerm profile. Your login shell and `$SHELL` stay `/bin/zsh`. If your login shell is not zsh, the installer skips this part.
 
 ## How it works
 
@@ -42,6 +47,7 @@ MyanTerm works with the grid instead:
 
 - Made for macOS Terminal.app. Other terminals (iTerm2, Ghostty, kitty, ...) lay out text differently.
 - Built and tested on macOS 27 with Terminal 2.15. The installer checks the cell widths on your system and warns if they differ.
+- Spacing is tuned for 13 pt, the profile's size (26 pt is also exact). Terminal rounds its cell width to a whole point, so at other sizes Burmese comes out slightly looser or tighter.
 - Spaces between Burmese phrases are sometimes wider than one cell: that is where the extra room goes when a phrase is narrower than the cells Terminal reserves for it.
 - Programs that do their own width calculation (for example some full-screen tools) may still disagree with Terminal about where Burmese text ends.
 
@@ -52,7 +58,7 @@ tools/build_all.sh            # creates fonts/MyanTerm-*.ttf and MyanTerm.termin
 tools/build_all.sh --install  # also copies the fonts into ~/Library/Fonts
 ```
 
-Needs Python 3; the script installs fontTools and uharfbuzz into a local `.venv`. Sources: `src/` (Noto Sans Mono and Noto Sans Myanmar), `data/corpus_counts.tsv` (syllable frequencies from Burmese Wikipedia, XL-Sum, HPLT, FLORES-200, Tatoeba and other Burmese text), `tools/` (segmenter, syllable list, font builder).
+Needs Python 3; the script installs fontTools and uharfbuzz into a local `.venv`. The bundled zsh is built with `zsh/build-portable.sh` (needs Xcode Command Line Tools). Sources: `src/` (Noto Sans Mono and Noto Sans Myanmar), `data/corpus_counts.tsv` (syllable frequencies from Burmese Wikipedia, XL-Sum, HPLT, FLORES-200, Tatoeba and other Burmese text), `tools/` (segmenter, syllable list, font builder).
 
 ## License
 

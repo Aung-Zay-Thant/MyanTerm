@@ -9,3 +9,4 @@ zsh/build/
 zsh/prefix/
 zsh/tmp/
 zsh/*.log
+zsh/dist/

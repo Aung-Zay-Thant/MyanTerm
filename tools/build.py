@@ -49,8 +49,10 @@ from segment import cells  # noqa: E402
 
 mono_path, mm_path, clusters_path, out_path, family = sys.argv[1:6]
 
-CELL = 600          # Noto Sans Mono advance
-S = 0.84            # Burmese size relative to Latin (0.83 = corpus text fills its cells on average)
+CELL = 8000 / 13    # cell width in font units. Terminal.app rounds its cell width to a whole point,
+                    # so a 0.6 em font gets 8 pt cells at 13 pt (2.6% wider than the font assumes).
+                    # 8/13 em makes the design match Terminal exactly at 13 pt (and 26 pt).
+S = 0.86            # Burmese size relative to the em (tuned at 0.84 for 0.6 em cells, scaled to 8/13 em)
 # Carry levels (units; 600 = one cell). Text may run up to ~4 cells ahead of the grid
 # (narrow syllables; the spare room shows up at the next space) and up to ~2 cells
 # behind it (wide syllables). Chosen by simulating 6000 real phrases (FLORES-200):
@@ -364,7 +366,7 @@ print("syllables:", len(syl), "with carry copies:", sum(len(e["variants"]) > 1 f
 var_names = [v[0] for e in syl for k, v in sorted(e["variants"].items())]
 order = [".notdef"] + [P + n for n in new] + sorted(RAW + g for g in raw_needed) + var_names
 assert len(order) + mono_glyphs < 65535, f"too many glyphs: {len(order)}"
-glyphs, metrics = {".notdef": mm["glyf"][".notdef"]}, {".notdef": CELL}
+glyphs, metrics = {".notdef": mm["glyf"][".notdef"]}, {".notdef": round(CELL)}
 for n, (src, fx, adv) in new.items():
     pen = TTGlyphPen(None)
     for op, pts in outline(src):
@@ -395,7 +397,7 @@ for e in syl:
         if not parts:          # e.g. a syllable of only invisible marks
             gl = TTGlyphPen(None).glyph()
         glyphs[name] = gl
-        metrics[name] = e["n"] * CELL
+        metrics[name] = round(e["n"] * CELL)
 
 out = TTFont(mm_path)
 out["cmap"].tables
@@ -407,7 +409,7 @@ out["glyf"].glyphOrder = order
 out["hmtx"].metrics = {}
 for n in order:
     glyphs[n].recalcBounds(out["glyf"])
-    out["hmtx"].metrics[n] = (metrics[n], getattr(glyphs[n], "xMin", 0))
+    out["hmtx"].metrics[n] = (round(metrics[n]), getattr(glyphs[n], "xMin", 0))
 for sub in out["cmap"].tables:
     sub.cmap = {u: P + g for u, g in cmap.items() if g in new and (sub.format == 12 or u <= 0xFFFF)}
 out["post"].formatType = 2.0
@@ -495,7 +497,7 @@ merged.setGlyphOrder(order_m)
 for name, (gl, adv) in extra.items():
     mglyf[name] = gl
     gl.recalcBounds(mglyf)
-    mhmtx[name] = (adv, getattr(gl, "xMin", 0))
+    mhmtx[name] = (round(adv), getattr(gl, "xMin", 0))
 for sub in merged["cmap"].tables:
     for u in ZW_CHARS:
         if sub.format == 12 or u <= 0xFFFF:
@@ -696,13 +698,17 @@ merged["OS/2"].sTypoAscender, merged["OS/2"].sTypoDescender, merged["OS/2"].sTyp
 merged["OS/2"].usWinAscent = max(merged["OS/2"].usWinAscent, ASCENT)
 merged["OS/2"].usWinDescent = max(merged["OS/2"].usWinDescent, DESCENT)
 merged["post"].isFixedPitch = 1
+for g, (a, lsb) in list(merged["hmtx"].metrics.items()):   # widen the Latin cell to match
+    if a in (600, 1200, 1800):
+        merged["hmtx"].metrics[g] = (round(a / 600 * CELL), lsb)
+merged["OS/2"].xAvgCharWidth = round(CELL)
 merged["hhea"].advanceWidthMax = max(a for a, _ in merged["hmtx"].metrics.values())
 
 style = "Bold" if "Bold" in mono_path else "Regular"
 ps = family.replace(" ", "") + "-" + style
 name = merged["name"]
 name.names = [n for n in name.names if n.nameID in (7, 8, 9, 11, 12)]
-VERSION = "1.000"
+VERSION = "1.100"
 COPYRIGHT = ("Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic, "
              "https://github.com/notofonts/myanmar). MyanTerm modifications copyright 2026 the MyanTerm authors.")
 DESCRIPTION = ("Monospace font that renders Burmese (Myanmar script) naturally in macOS Terminal.app. "

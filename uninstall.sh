@@ -1,8 +1,8 @@
 #!/bin/bash
-# Remove MyanTerm: fonts, the "MyanTerm" Terminal profile, and the optional zsh build.
+# Remove MyanTerm: fonts, the "MyanTerm" Terminal profile and the bundled zsh.
 set -uo pipefail
 
-ZSH_PREFIX="$HOME/.local/myanterm-zsh"
+ZSH_DIR="$HOME/.local/myanterm-zsh"
 term() { osascript -e "tell application \"Terminal\" to $1" 2>/dev/null; }
 
 # default/startup profile back to Basic if they point at MyanTerm
@@ -17,11 +17,12 @@ fi
 rm -f "$HOME/Library/Fonts/MyanTerm-Regular.ttf" "$HOME/Library/Fonts/MyanTerm-Bold.ttf"
 echo "Removed the MyanTerm fonts"
 
-if [ -d "$ZSH_PREFIX" ]; then
-    if [ "$(defaults read com.apple.Terminal Shell 2>/dev/null)" = "$ZSH_PREFIX/bin/zsh" ]; then
-        echo "First set Terminal > Settings > General > \"Shells open with\" back to \"Default login shell\","
-        echo "then run:  rm -rf \"$ZSH_PREFIX\""
+if [ -d "$ZSH_DIR" ]; then
+    if [ "$(defaults read com.apple.Terminal Shell 2>/dev/null)" = "$ZSH_DIR/bin/zsh" ]; then
+        echo "Terminal > Settings > General > \"Shells open with\" points at $ZSH_DIR/bin/zsh;"
+        echo "set it back to \"Default login shell\", then run:  rm -rf \"$ZSH_DIR\""
     else
-        rm -rf "$ZSH_PREFIX" && echo "Removed $ZSH_PREFIX"
+        rm -rf "$ZSH_DIR" && echo "Removed $ZSH_DIR"
     fi
 fi
+echo "Windows that are still open keep running until you close them."
