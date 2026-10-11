@@ -1,0 +1,104 @@
+diff -ru zsh-5.9.2.orig/Src/compat.c zsh-5.9.2/Src/compat.c
+--- zsh-5.9.2.orig/Src/compat.c	2026-10-11 13:49:10
++++ zsh-5.9.2/Src/compat.c	2026-10-11 13:49:26
+@@ -736,6 +736,75 @@
+ #endif /* HAVE_STRTOUL */
+ 
+ /**/
++#ifdef MULTIBYTE_SUPPORT
++
++/*
++ * MyanTerm patch: column widths for the Myanmar script.
++ *
++ * Terminal.app (and other CoreText based terminals) give every Myanmar
++ * spacing combining mark (General_Category Mc, e.g. U+102B U+102C
++ * U+1031 U+1038 U+103B U+103C) a cell of its own, and only the
++ * non-spacing marks (Mn, e.g. U+102D U+102F U+1036 U+1037 U+1039
++ * U+103A) take no cell.  Both the system wcwidth() and the internal
++ * Unicode 9 table treat *all* marks as zero width, so ZLE's idea of
++ * the cursor position drifts by one column for every Mc in the line.
++ *
++ * Returns the width for characters in the Myanmar blocks
++ *   U+1000..U+109F  Myanmar
++ *   U+A9E0..U+A9FE  Myanmar Extended-B (U+A9FF is unassigned)
++ *   U+AA60..U+AA7F  Myanmar Extended-A
++ * (Mn = 0, everything else = 1), or -2 for any other character so the
++ * caller falls back to its normal width source.
++ */
++
++/**/
++mod_export int
++myanmar_wcwidth(wchar_t ucs)
++{
++    if (ucs >= 0x1000 && ucs <= 0x109f) {
++	if ((ucs >= 0x102d && ucs <= 0x1030) ||
++	    (ucs >= 0x1032 && ucs <= 0x1037) ||
++	    (ucs >= 0x1039 && ucs <= 0x103a) ||
++	    (ucs >= 0x103d && ucs <= 0x103e) ||
++	    (ucs >= 0x1058 && ucs <= 0x1059) ||
++	    (ucs >= 0x105e && ucs <= 0x1060) ||
++	    (ucs >= 0x1071 && ucs <= 0x1074) ||
++	    ucs == 0x1082 ||
++	    (ucs >= 0x1085 && ucs <= 0x1086) ||
++	    ucs == 0x108d ||
++	    ucs == 0x109d)
++	    return 0;
++	return 1;
++    }
++    if (ucs >= 0xa9e0 && ucs <= 0xa9fe)
++	return ucs == 0xa9e5 ? 0 : 1;
++    if (ucs >= 0xaa60 && ucs <= 0xaa7f)
++	return ucs == 0xaa7c ? 0 : 1;
++    return -2;
++}
++
++/**/
++#ifndef ENABLE_UNICODE9
++
++/* WCWIDTH() when the C library's wcwidth() is used. */
++
++/**/
++mod_export int
++mymr_libc_wcwidth(wchar_t ucs)
++{
++    int w = myanmar_wcwidth(ucs);
++    if (w != -2)
++	return w;
++    return wcwidth(ucs);
++}
++
++/**/
++#endif	/* !ENABLE_UNICODE9 */
++
++/**/
++#endif	/* MULTIBYTE_SUPPORT */
++
++/**/
+ #ifdef ENABLE_UNICODE9
+ #include "./wcwidth9.h"
+ 
+@@ -743,7 +812,10 @@
+ int
+ u9_wcwidth(wchar_t ucs)
+ {
+-  int w = wcwidth9(ucs);
++  int w = myanmar_wcwidth(ucs);
++  if (w != -2)
++    return w;
++  w = wcwidth9(ucs);
+   if (w < -1)
+     return 1;
+   return w;
+diff -ru zsh-5.9.2.orig/Src/zsh.h zsh-5.9.2/Src/zsh.h
+--- zsh-5.9.2.orig/Src/zsh.h	2026-10-11 13:49:10
++++ zsh-5.9.2/Src/zsh.h	2026-10-11 13:49:26
+@@ -3300,7 +3300,8 @@
+ #ifdef ENABLE_UNICODE9
+ #define WCWIDTH(wc)	u9_wcwidth(wc)
+ #else
+-#define WCWIDTH(wc)	wcwidth(wc)
++/* MyanTerm patch: Myanmar widths override, see myanmar_wcwidth() */
++#define WCWIDTH(wc)	mymr_libc_wcwidth(wc)
+ #endif
+ /*
+  * Note WCWIDTH_WINT() takes wint_t, typically as a convchar_t.

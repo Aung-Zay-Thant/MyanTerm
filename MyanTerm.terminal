@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Font</key>
+	<data>
+	YnBsaXN0MDDUAQIDBAUGGBtZJGFyY2hpdmVyWCRvYmplY3RzVCR0b3BYJHZlcnNpb25f
+	EA9OU0tleWVkQXJjaGl2ZXKkBwgRElUkbnVsbNQJCgsMDQ4PEFYkY2xhc3NWTlNOYW1l
+	Vk5TU2l6ZVhOU2ZGbGFnc4ADgAIjQCoAAAAAAAAQEF8QEE15YW5UZXJtLVJlZ3VsYXLS
+	ExQVFlgkY2xhc3Nlc1okY2xhc3NuYW1lohYXVk5TRm9udFhOU09iamVjdNEZGlRyb290
+	gAESAAGGoAgRGyQpMkRJT1hfZm12eHqDhZidprG0u8THzM4AAAAAAAABAQAAAAAAAAAc
+	AAAAAAAAAAAAAAAAAAAA0w==
+	</data>
+	<key>FontAntialias</key>
+	<true/>
+	<key>FontHeightSpacing</key>
+	<real>1.0</real>
+	<key>FontWidthSpacing</key>
+	<real>1.0</real>
+	<key>ProfileCurrentVersion</key>
+	<real>2.09</real>
+	<key>columnCount</key>
+	<integer>100</integer>
+	<key>name</key>
+	<string>MyanTerm</string>
+	<key>rowCount</key>
+	<integer>30</integer>
+	<key>type</key>
+	<string>Window Settings</string>
+</dict>
+</plist>
