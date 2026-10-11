@@ -5,9 +5,12 @@
 #   ./install.sh --default       ...and do that without asking
 #   ./install.sh --no-default    ...and only add the MyanTerm profile
 #   ./install.sh --no-zsh        don't set up the zsh that fixes typing Burmese at the prompt
+#   ./install.sh --edition=26    install the fonts made for macOS 26 and earlier (or =27); the default
+#                                follows this Mac's macOS version
 #
 # What it changes:
-#   ~/Library/Fonts/MyanTerm-Regular.ttf, MyanTerm-Bold.ttf   the fonts
+#   ~/Library/Fonts/MyanTerm-Regular.ttf, MyanTerm-Bold.ttf   the fonts (Terminal before macOS 27 draws
+#                                                              Burmese narrower, so it gets its own edition)
 #   ~/.local/myanterm-zsh/bin/zsh                              zsh 5.9.2 with Terminal's Burmese widths
 #   Terminal profile "MyanTerm"                                MyanTerm 13pt, starts that zsh as a login shell
 # If you choose to use MyanTerm in every window (the default answer), MyanTerm also becomes the
@@ -22,13 +25,15 @@ ZSH_DIR="$HOME/.local/myanterm-zsh"
 ZSH_BIN="$ZSH_DIR/bin/zsh"
 MAKE_DEFAULT=ask
 WITH_ZSH=1
+EDITION=
 for arg in "$@"; do
     case "$arg" in
         --default) MAKE_DEFAULT=yes ;;
         --no-default) MAKE_DEFAULT=no ;;
         --no-zsh) WITH_ZSH=0 ;;
         --with-zsh) WITH_ZSH=1 ;;   # accepted for compatibility with 1.0
-        -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
+        --edition=26|--edition=27) EDITION=${arg#--edition=} ;;
+        -h|--help) sed -n '2,21p' "$0"; exit 0 ;;
         *) echo "unknown option: $arg" >&2; exit 2 ;;
     esac
 done
@@ -45,15 +50,28 @@ has_profile() { term 'get name of settings sets' | tr ',' '\n' | sed 's/^ *//' |
 
 [ "$(uname -s)" = Darwin ] || { say "MyanTerm is for macOS Terminal.app."; exit 1; }
 
-# 1. fonts (remove, then copy: a fresh file, not an in-place overwrite of a font Terminal has loaded)
+# 1. fonts (remove, then copy: a fresh file, not an in-place overwrite of a font Terminal has loaded).
+#    Terminal before macOS 27 gives ာ ေ ျ ြ း a cell but draws them with no width, so Burmese
+#    gets about 2/3 of the room there: those Macs get the narrower edition in fonts/macos26.
+macos=${MYANTERM_TEST_MACOS:-$(sw_vers -productVersion 2>/dev/null || echo 0)}
+if [ -z "$EDITION" ]; then
+    if [ "${macos%%.*}" -ge 27 ] 2>/dev/null; then EDITION=27; else EDITION=26; fi
+fi
+SRC_FONTS="$HERE/fonts"
+[ "$EDITION" = 26 ] && SRC_FONTS="$HERE/fonts/macos26"
 mkdir -p "$FONT_DIR"
 upgrade=no
-if [ -f "$FONT_DIR/MyanTerm-Regular.ttf" ] && ! cmp -s "$FONT_DIR/MyanTerm-Regular.ttf" "$HERE/fonts/MyanTerm-Regular.ttf"; then
+if [ -f "$FONT_DIR/MyanTerm-Regular.ttf" ] && ! cmp -s "$FONT_DIR/MyanTerm-Regular.ttf" "$SRC_FONTS/MyanTerm-Regular.ttf"; then
     upgrade=yes
 fi
 rm -f "$FONT_DIR"/MyanTerm-Regular.ttf "$FONT_DIR"/MyanTerm-Bold.ttf
-cp "$HERE"/fonts/MyanTerm-Regular.ttf "$HERE"/fonts/MyanTerm-Bold.ttf "$FONT_DIR"/
-say "Installed fonts into $FONT_DIR"
+cp "$SRC_FONTS"/MyanTerm-Regular.ttf "$SRC_FONTS"/MyanTerm-Bold.ttf "$FONT_DIR"/
+if [ "$EDITION" = 26 ]; then
+    say "Installed fonts into $FONT_DIR (edition for macOS 26 and earlier; this Mac: macOS $macos)"
+    say "  After upgrading this Mac to macOS 27 or later, run this installer again."
+else
+    say "Installed fonts into $FONT_DIR"
+fi
 
 # 2. zsh with Terminal's Burmese widths (only used by the MyanTerm profile)
 zsh_ok=0

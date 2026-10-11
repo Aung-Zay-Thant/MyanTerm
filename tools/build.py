@@ -26,12 +26,18 @@ So this font:
   * keeps per-character "grid" glyphs (shifted by whole cells) as a fallback for
     unusual sequences that aren't in the syllable list.
 
-usage: build.py MONO.ttf MYANMAR.ttf CLUSTERS.txt OUT.ttf FAMILY
+Terminal before macOS 27 (Terminal 470 on macOS 26) still gives spacing vowel signs and
+medials (ာ ေ ျ ြ း) a cell for the cursor, but draws the row as if they had no width, so
+Burmese gets about two thirds of the room. MYANTERM_EDITION=26 builds the edition for those
+Terminals: cells counted that way, and Burmese drawn smaller and narrower to fit.
+
+usage: [MYANTERM_EDITION=26] build.py MONO.ttf MYANMAR.ttf CLUSTERS.txt OUT.ttf FAMILY
 CLUSTERS.txt: one syllable per line, most frequent first ("text<TAB>count" ok).
 Latin, Greek and Cyrillic runs skip all of this (empty feature list), so English
 text and code shape as fast as with a plain monospace font.
 """
 import hashlib
+import os
 import sys
 import unicodedata
 
@@ -52,7 +58,11 @@ mono_path, mm_path, clusters_path, out_path, family = sys.argv[1:6]
 CELL = 8000 / 13    # cell width in font units. Terminal.app rounds its cell width to a whole point,
                     # so a 0.6 em font gets 8 pt cells at 13 pt (2.6% wider than the font assumes).
                     # 8/13 em makes the design match Terminal exactly at 13 pt (and 26 pt).
+LEGACY = os.environ.get("MYANTERM_EDITION", "27") == "26"
 S = 0.86            # Burmese size relative to the em (tuned at 0.84 for 0.6 em cells, scaled to 8/13 em)
+SY = S              # vertical scale; S is the horizontal one
+if LEGACY:          # about 2/3 of the room: a little smaller (SY) and narrower (S/SY)
+    S, SY = float(os.environ.get("MYANTERM_SX", "0.60")), float(os.environ.get("MYANTERM_SY", "0.80"))
 # Carry levels (units; 600 = one cell). Text may run up to ~4 cells ahead of the grid
 # (narrow syllables; the spare room shows up at the next space) and up to ~2 cells
 # behind it (wide syllables). Chosen by simulating 6000 real phrases (FLORES-200):
@@ -337,7 +347,7 @@ for line in open(clusters_path, encoding="utf-8"):
     if used + len(raw_needed) + len(LEVELS) > budget:
         print("glyph budget reached; dropped the rest of the list from", repr(s))
         break
-    n = cells(s)
+    n = cells(s, spacing_marks=not LEGACY)
     if n == 0:
         continue
     if len(s) == 1 and unicodedata.category(s) not in ("Lo", "Nd", "Po", "So"):
@@ -371,7 +381,7 @@ glyphs, metrics = {".notdef": mm["glyf"][".notdef"]}, {".notdef": round(CELL)}
 for n, (src, fx, adv) in new.items():
     pen = TTGlyphPen(None)
     for op, pts in outline(src):
-        getattr(pen, op)(*[(round(fx(x)), round(S * y)) for x, y in pts])
+        getattr(pen, op)(*[(round(fx(x)), round(SY * y)) for x, y in pts])
     glyphs[P + n] = pen.glyph()
     metrics[P + n] = adv
 for g in raw_needed:
@@ -388,8 +398,8 @@ for e in syl:
                 continue
             c = GlyphComponent()
             c.glyphName = RAW + g
-            c.x, c.y = round(x), round(S * y)
-            c.transform = [[kx, 0], [0, S]]
+            c.x, c.y = round(x), round(SY * y)
+            c.transform = [[kx, 0], [0, SY]]
             c.flags = 0x1000   # UNSCALED_COMPONENT_OFFSET
             parts.append(c)
         gl = Glyph()
@@ -765,11 +775,12 @@ style = "Bold" if "Bold" in mono_path else "Regular"
 ps = family.replace(" ", "") + "-" + style
 name = merged["name"]
 name.names = [n for n in name.names if n.nameID in (7, 8, 9, 11, 12)]
-VERSION = "1.210"
+VERSION = "1.400" if LEGACY else "1.210"
 COPYRIGHT = ("Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic, "
              "https://github.com/notofonts/myanmar). MyanTerm modifications copyright 2026 the MyanTerm authors.")
-DESCRIPTION = ("Monospace font that renders Burmese (Myanmar script) naturally in macOS Terminal.app. "
-               "Based on Noto Sans Mono and Noto Sans Myanmar.")
+DESCRIPTION = ("Monospace font that renders Burmese (Myanmar script) naturally in macOS Terminal.app"
+               + (" (edition for macOS 26 and earlier). " if LEGACY else ". ")
+               + "Based on Noto Sans Mono and Noto Sans Myanmar.")
 LICENSE = ("This Font Software is licensed under the SIL Open Font License, Version 1.1. "
            "This license is available with a FAQ at: https://openfontlicense.org")
 for nid, val in {0: COPYRIGHT, 1: family, 2: style, 3: f"{VERSION};{ps}", 4: f"{family} {style}",

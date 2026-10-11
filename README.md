@@ -8,13 +8,13 @@ macOS Terminal မှာ မြန်မာစာကို မှန်မှန
 
 ## Install
 
-1. Download `MyanTerm-1.3.0.zip` from [Releases](../../releases) and unzip it.
+1. Download `MyanTerm-1.4.0.zip` from [Releases](../../releases) and unzip it.
 2. Double-click `Install MyanTerm.command`. The first time, macOS may block it: right-click it, choose Open, then Open again.
-   Or, in Terminal: `cd MyanTerm-1.3.0 && ./install.sh`
+   Or, in Terminal: `cd MyanTerm-1.4.0 && ./install.sh`
 
 The installer:
 
-- copies `MyanTerm-Regular.ttf` and `MyanTerm-Bold.ttf` into `~/Library/Fonts`
+- copies `MyanTerm-Regular.ttf` and `MyanTerm-Bold.ttf` into `~/Library/Fonts`, in the edition that matches your macOS (see [macOS 26 and earlier](#macos-26-and-earlier))
 - copies a ready-made zsh into `~/.local/myanterm-zsh` (see below)
 - adds a Terminal profile named **MyanTerm** that pins everything Burmese depends on: MyanTerm 13 pt, standard character spacing, UTF-8 encoding and locale, and that zsh as the login shell; your other profiles are not changed
 - asks whether every Terminal window should use MyanTerm. If yes, MyanTerm becomes the default profile and Terminal > Settings > General > "Shells open with" is set to that zsh, so typing Burmese works in windows of any profile (both can be changed back in Terminal > Settings)
@@ -22,7 +22,7 @@ The installer:
 
 Then quit Terminal (Command-Q) and open it again. Windows that were open during the install keep the old shell, and after an upgrade Terminal keeps the old font in memory, until it restarts.
 
-Options: `--default` / `--no-default` (skip the question), `--no-zsh` (font and profile only).
+Options: `--default` / `--no-default` (skip the question), `--no-zsh` (font and profile only), `--edition=26` / `--edition=27` (choose the font edition instead of following the macOS version).
 
 To remove everything: `./uninstall.sh`.
 
@@ -46,10 +46,16 @@ MyanTerm works with the grid instead:
 - Burmese typed in a non-standard order is drawn like the standard spelling where the order is unambiguous: ေ or ြ typed before the consonant (visual order, a Zawgyi-era habit) and swapped marks such as ုိ for ို or ့် for ့်.
 - Uncommon sequences fall back to per-character glyphs that are positioned to stay readable.
 
+## macOS 26 and earlier
+
+Terminal on macOS 26 (Terminal 470) counts the spacing vowel signs and medials (ာ ေ ျ ြ း) as one column each for the cursor and line wrapping, like macOS 27, but draws the text as if they had no width. Burmese then gets about two thirds of the room, and the normal MyanTerm draws syllables on top of each other.
+
+On those Macs the installer uses a second edition of the font (`fonts/macos26`), built for that drawing: the same syllables and spacing logic, with Burmese about 7% smaller and 30% narrower so it fits. What the font cannot change is the cursor. Terminal still places it as if the marks took a column, so in a line with Burmese the cursor sits a few columns to the right of the text it follows (one column per ာ ေ ျ ြ း before it). Typing and editing still work correctly. After upgrading to macOS 27, run the installer again to get the normal edition.
+
 ## Limits
 
 - Made for macOS Terminal.app. Other terminals (iTerm2, Ghostty, kitty, ...) lay out text differently.
-- Built and tested on macOS 27 with Terminal 2.15. The installer checks the cell widths on your system and warns if they differ.
+- Built and tested on macOS 27 with Terminal 2.15. The macOS 26 edition was checked against screenshots from macOS 26.7.1 (Terminal 470.2). The installer checks the cell widths on your system and warns if they differ.
 - Spacing is tuned for 13 pt, the profile's size (26 pt is also exact). Terminal rounds its cell width to a whole point, so at other sizes Burmese comes out slightly looser or tighter.
 - Spaces between Burmese phrases are sometimes wider than one cell: that is where the extra room goes when a phrase is narrower than the cells Terminal reserves for it.
 - Programs that do their own width calculation (for example some full-screen tools) may still disagree with Terminal about where Burmese text ends.
@@ -58,7 +64,7 @@ MyanTerm works with the grid instead:
 ## Building from source
 
 ```sh
-tools/build_all.sh            # creates fonts/MyanTerm-*.ttf and MyanTerm.terminal
+tools/build_all.sh            # creates fonts/MyanTerm-*.ttf, fonts/macos26/MyanTerm-*.ttf and MyanTerm.terminal
 tools/build_all.sh --install  # also copies the fonts into ~/Library/Fonts
 ```
 

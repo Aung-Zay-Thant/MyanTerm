@@ -50,9 +50,12 @@ def clusters(text):
         yield text[pos:], False
 
 
-def cells(s):
-    """Terminal.app cell count: non-spacing marks take 0 cells, everything else 1."""
-    return sum(0 if unicodedata.category(ch) == "Mn" else 1 for ch in s)
+def cells(s, spacing_marks=True):
+    """Cells Terminal.app draws s in: non-spacing marks take 0 cells, everything else 1.
+    Terminal before macOS 27 draws the spacing vowel signs and medials (Mc: ာ ေ ျ ြ း ...)
+    with no width either (it still gives them a cell for the cursor): spacing_marks=False."""
+    zero = ("Mn",) if spacing_marks else ("Mn", "Mc")
+    return sum(0 if unicodedata.category(ch) in zero else 1 for ch in s)
 
 
 if __name__ == "__main__":
