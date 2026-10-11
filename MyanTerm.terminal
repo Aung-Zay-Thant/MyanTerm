@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CharacterEncoding</key>
+	<integer>4</integer>
+	<key>EastAsianAmbiguousWide</key>
+	<false/>
 	<key>Font</key>
 	<data>
 	YnBsaXN0MDDUAQIDBAUGGBtZJGFyY2hpdmVyWCRvYmplY3RzVCR0b3BYJHZlcnNpb25f
@@ -19,6 +23,10 @@
 	<real>1.0</real>
 	<key>ProfileCurrentVersion</key>
 	<real>2.09</real>
+	<key>SetLanguageEnvironmentVariables</key>
+	<true/>
+	<key>TerminalType</key>
+	<string>xterm-256color</string>
 	<key>columnCount</key>
 	<integer>100</integer>
 	<key>name</key>

@@ -16,11 +16,26 @@ MED = "ျြွှၞ-ၠႂ"
 VOW = "ေါာိီုူဲဳ-ဵံၖ-ၙၢ-ၤၧ-ၭၱ-ၴႃ-ႍႏႚ-ႝ"
 TONE = "့်း"
 CORE = f"[{CONS}](?![်္])[{MED}]*[{VOW}]*[{TONE}]*"
-# a final may carry a medial/vowel written after the asat: ယောက်ျား, ကျွန်ုပ်
-FINAL = f"[{CONS}](?:\u103A\u1037?|\u1037\u103A)[\u103B\u103C]?[{VOW}]*[{TONE}]*"
+# a final may carry ျ or a vowel written after the asat (ယောက်ျား, ကျွန်ုပ်), but never ေ or ြ:
+# those always start the next syllable (also when it is typed in visual order)
+FINAL = f"[{CONS}](?:\u103A\u1037?|\u1037\u103A)\u103B?[\u102B-\u1030\u1032-\u1036]*[{TONE}]*"
 KINZI = f"င်္{CORE}"
 STACK = f"[{CONS}]္{CORE}"
 CLUSTER = re.compile(f"{KINZI}|{STACK}|{FINAL}|{CORE}")
+
+# Standard Unicode storage order inside a syllable (UTN #11): consonant, medials ျ ြ ွ ှ,
+# ေ, ါ/ာ, ိ/ီ/ဲ, ု/ူ, then ံ ့ ် (any order) and း last. Text typed in visual order or with
+# swapped marks also matches CLUSTER, so the syllable list keeps only this order and the
+# font maps the common other orders onto the same glyphs.
+EXT_VOW = "\u1033-\u1035\u1056-\u1059\u1062-\u1064\u1067-\u106D\u1071-\u1074\u1083-\u108D\u108F\u109A-\u109D"
+CANON_CORE = (f"[{CONS}]\u103B?\u103C?\u103D?\u103E?[\u105E-\u1060\u1082]*"
+              f"\u1031?[\u102B\u102C]?[\u102D\u102E\u1032]?[\u102F\u1030]?[{EXT_VOW}]*[\u1036\u1037\u103A]{{0,3}}\u1038?")
+CANONICAL = re.compile(f"\u1004\u103A\u1039{CANON_CORE}|[{CONS}]\u1039{CANON_CORE}|{FINAL}|{CANON_CORE}")
+
+
+def canonical(cluster):
+    """True if the cluster is in standard Unicode order."""
+    return CANONICAL.fullmatch(cluster) is not None
 
 
 def clusters(text):

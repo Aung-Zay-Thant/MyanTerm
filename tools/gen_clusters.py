@@ -10,7 +10,7 @@ import itertools
 import sys
 
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
-from segment import CLUSTER  # noqa: E402
+from segment import CLUSTER, canonical  # noqa: E402
 
 CONS = [chr(c) for c in range(0x1000, 0x1021 + 1)] + ["ဿ"]          # က..အ, ဿ
 INDEP = ["ဣ", "ဤ", "ဥ", "ဦ", "ဧ", "ဩ", "ဪ", "၎"]
@@ -27,7 +27,7 @@ seen, order = set(), []
 
 
 def put(s):
-    if s not in seen and CLUSTER.fullmatch(s):
+    if s not in seen and CLUSTER.fullmatch(s) and canonical(s):
         seen.add(s)
         order.append(s)
 

@@ -517,8 +517,53 @@ C = consonants
 MARKS = [n for n, v in new.items() if v[2] == 0 and not n.endswith((".l1", ".r1", ".lra"))]
 CONT = sorted({P + by_char[ch] for ch in by_char
                if unicodedata.category(ch) in ("Mn", "Mc") and by_char[ch] in new})
-multi = sorted((e for e in syl if len(e["text"]) > 1), key=lambda e: -len(e["inputs"]))
-syl_rules = "\n".join(f"  sub {' '.join(e['inputs'])} by {e['base']};" for e in multi)
+# People type Burmese in more than one order. Each syllable also answers to the common
+# non-standard orders, mapped to the same glyph (same characters, so the same cells):
+#  - visual order, a Zawgyi-era habit: ေ and/or ြ typed before the consonant (ေက, ြက, ေြက ...)
+#  - swapped mark pairs: ုိ for ို, ့် for ့်, ံု for ုံ, ှွ for ွှ
+E_SIGN, RA_SIGN = "\u1031", "\u103C"
+SWAPS = [("\u102D\u102F", "\u102F\u102D"), ("\u1037\u103A", "\u103A\u1037"),
+         ("\u102F\u1036", "\u1036\u102F"), ("\u103D\u103E", "\u103E\u103D")]
+
+
+def typing_orders(text):
+    out = set()
+    if text.count(E_SIGN) > 1 or text.count(RA_SIGN) > 1:
+        return out          # typo syllables (doubled ေ/ြ): their reorderings would swallow neighbours
+    if len(text) > 1 and unicodedata.category(text[0]) == "Lo" and text[1] not in "\u103A\u1039":
+        c, rest = text[0], text[1:]
+        if E_SIGN in rest:
+            out.add(E_SIGN + c + rest.replace(E_SIGN, "", 1))
+        if RA_SIGN in rest:
+            out.add(RA_SIGN + c + rest.replace(RA_SIGN, "", 1))
+        if E_SIGN in rest and RA_SIGN in rest:
+            core = rest.replace(E_SIGN, "", 1).replace(RA_SIGN, "", 1)
+            out.update({E_SIGN + RA_SIGN + c + core, RA_SIGN + E_SIGN + c + core})
+    for variant in [text] + sorted(out):
+        for a, b in SWAPS:
+            if a in variant:
+                out.add(variant.replace(a, b))
+    out.discard(text)
+    return out
+
+
+canonical = {e["text"] for e in syl}
+claimed = {e["inputs"] for e in syl}
+alt_rules = []
+for e in syl:
+    for alt in sorted(typing_orders(e["text"])):
+        # an order ending in ေ/ြ would take the next syllable's (visually typed) first letter
+        if alt in canonical or alt[-1] in (E_SIGN, RA_SIGN) or any(ch not in by_char for ch in alt):
+            continue
+        inputs = tuple(P + by_char[ch] for ch in alt)
+        if inputs in claimed:
+            continue
+        claimed.add(inputs)
+        alt_rules.append((inputs, e["base"]))
+print("extra typing-order rules:", len(alt_rules))
+multi = [(e["inputs"], e["base"]) for e in syl if len(e["text"]) > 1] + alt_rules
+multi.sort(key=lambda r: -len(r[0]))
+syl_rules = "\n".join(f"  sub {' '.join(inputs)} by {base};" for inputs, base in multi)
 letters = sorted(LETTERS.values(), key=lambda e: e["inputs"][0])
 carry_bases = [e for e in syl if len(e["variants"]) > 1] + punct + [zw, space]
 LEVEL_RANGE = LEVELS
@@ -708,7 +753,7 @@ style = "Bold" if "Bold" in mono_path else "Regular"
 ps = family.replace(" ", "") + "-" + style
 name = merged["name"]
 name.names = [n for n in name.names if n.nameID in (7, 8, 9, 11, 12)]
-VERSION = "1.100"
+VERSION = "1.200"
 COPYRIGHT = ("Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic, "
              "https://github.com/notofonts/myanmar). MyanTerm modifications copyright 2026 the MyanTerm authors.")
 DESCRIPTION = ("Monospace font that renders Burmese (Myanmar script) naturally in macOS Terminal.app. "

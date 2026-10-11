@@ -8,15 +8,15 @@ macOS Terminal မှာ မြန်မာစာကို မှန်မှန
 
 ## Install
 
-1. Download `MyanTerm-1.1.zip` from [Releases](../../releases) and unzip it.
+1. Download `MyanTerm-1.2.zip` from [Releases](../../releases) and unzip it.
 2. Double-click `Install MyanTerm.command`. The first time, macOS may block it: right-click it, choose Open, then Open again.
-   Or, in Terminal: `cd MyanTerm-1.1 && ./install.sh`
+   Or, in Terminal: `cd MyanTerm-1.2 && ./install.sh`
 
 The installer:
 
 - copies `MyanTerm-Regular.ttf` and `MyanTerm-Bold.ttf` into `~/Library/Fonts`
 - copies a ready-made zsh into `~/.local/myanterm-zsh` (see below)
-- adds a Terminal profile named **MyanTerm** (MyanTerm 13 pt) that starts that zsh as a login shell; your other profiles are not changed
+- adds a Terminal profile named **MyanTerm** that pins everything Burmese depends on: MyanTerm 13 pt, standard character spacing, UTF-8 encoding and locale, and that zsh as the login shell; your other profiles are not changed
 - asks whether new Terminal windows should use MyanTerm (Terminal > Settings > Profiles changes this later)
 - checks that your Terminal measures Burmese the way the font expects
 
@@ -41,6 +41,7 @@ MyanTerm works with the grid instead:
 - The font has no Myanmar OpenType script, so Core Text keeps glyphs in typed order and Terminal's placement is predictable.
 - Every Burmese syllable (about 7,000, chosen by frequency in large Burmese corpora) is a single ligature glyph drawn from the real Noto Sans Myanmar shaping: reordering, medial widths, kinzi, stacked consonants and mark positions are exactly as in normal Burmese typography.
 - Syllables are laid out proportionally, not one per cell. Each common syllable glyph exists in many copies shifted by small steps, and a contextual substitution picks the copy that continues where the previous syllable's natural spacing ended. Text can run a few cells ahead of or behind the grid; the difference is absorbed at the next space. Brackets, quotes and zero-width characters next to Burmese join this flow; English text and code are not affected.
+- Burmese typed in a non-standard order is drawn like the standard spelling where the order is unambiguous: ေ or ြ typed before the consonant (visual order, a Zawgyi-era habit) and swapped marks such as ုိ for ို or ့် for ့်.
 - Uncommon sequences fall back to per-character glyphs that are positioned to stay readable.
 
 ## Limits
@@ -50,6 +51,7 @@ MyanTerm works with the grid instead:
 - Spacing is tuned for 13 pt, the profile's size (26 pt is also exact). Terminal rounds its cell width to a whole point, so at other sizes Burmese comes out slightly looser or tighter.
 - Spaces between Burmese phrases are sometimes wider than one cell: that is where the extra room goes when a phrase is narrower than the cells Terminal reserves for it.
 - Programs that do their own width calculation (for example some full-screen tools) may still disagree with Terminal about where Burmese text ends.
+- Zawgyi-encoded text is a different encoding and is not supported. Visual-order typing is ambiguous after a syllable without a vowel (ဥပေဒ can mean ဥ+ပေ+ဒ), so such text shows the standard reading, as in every other app; type with a Unicode keyboard in standard order to avoid it.
 
 ## Building from source
 

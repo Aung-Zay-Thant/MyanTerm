@@ -17,14 +17,20 @@ font = {
                  "MyanTerm-Regular",
                  {"$classname": "NSFont", "$classes": ["NSFont", "NSObject"]}],
 }
+# Everything that affects how Burmese is measured and drawn is pinned here, so the profile
+# behaves the same on every Mac regardless of the user's other Terminal settings.
 profile = {
     "name": "MyanTerm",
     "type": "Window Settings",
     "ProfileCurrentVersion": 2.09,
     "Font": plistlib.dumps(font, fmt=plistlib.FMT_BINARY),
     "FontAntialias": True,
-    "FontWidthSpacing": 1.0,
+    "FontWidthSpacing": 1.0,          # cell = round(font advance) = 8 pt at 13 pt, as the font is built for
     "FontHeightSpacing": 1.0,
+    "CharacterEncoding": 4,           # UTF-8
+    "SetLanguageEnvironmentVariables": True,   # LANG=..UTF-8, so zsh decodes Burmese as characters
+    "EastAsianAmbiguousWide": False,  # keep Terminal's standard widths
+    "TerminalType": "xterm-256color",
     "columnCount": 100,
     "rowCount": 30,
 }
