@@ -8,9 +8,9 @@ macOS Terminal မှာ မြန်မာစာကို မှန်မှန
 
 ## Install
 
-1. Download `MyanTerm-1.2.1.zip` from [Releases](../../releases) and unzip it.
+1. Download `MyanTerm-1.2.2.zip` from [Releases](../../releases) and unzip it.
 2. Double-click `Install MyanTerm.command`. The first time, macOS may block it: right-click it, choose Open, then Open again.
-   Or, in Terminal: `cd MyanTerm-1.2.1 && ./install.sh`
+   Or, in Terminal: `cd MyanTerm-1.2.2 && ./install.sh`
 
 The installer:
 
@@ -21,6 +21,8 @@ The installer:
 - checks that your Terminal measures Burmese the way the font expects
 
 Open a new window with the MyanTerm profile (Shell > New Window > MyanTerm) to use it.
+
+Upgrading from an older MyanTerm: quit Terminal (Command-Q) and open it again after installing. Terminal keeps the old font in memory until it restarts.
 
 Options: `--default` / `--no-default` (skip the question), `--no-zsh` (font and profile only).
 

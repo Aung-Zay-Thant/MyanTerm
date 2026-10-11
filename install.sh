@@ -37,8 +37,12 @@ has_profile() { term 'get name of settings sets' | tr ',' '\n' | sed 's/^ *//' |
 
 [ "$(uname -s)" = Darwin ] || { say "MyanTerm is for macOS Terminal.app."; exit 1; }
 
-# 1. fonts
+# 1. fonts (remove, then copy: a fresh file, not an in-place overwrite of a font Terminal has loaded)
 mkdir -p "$FONT_DIR"
+upgrade=no
+if [ -f "$FONT_DIR/MyanTerm-Regular.ttf" ] && ! cmp -s "$FONT_DIR/MyanTerm-Regular.ttf" "$HERE/fonts/MyanTerm-Regular.ttf"; then
+    upgrade=yes
+fi
 rm -f "$FONT_DIR"/MyanTerm-Regular.ttf "$FONT_DIR"/MyanTerm-Bold.ttf
 cp "$HERE"/fonts/MyanTerm-Regular.ttf "$HERE"/fonts/MyanTerm-Bold.ttf "$FONT_DIR"/
 say "Installed fonts into $FONT_DIR"
@@ -123,4 +127,10 @@ if [ "${TERM_PROGRAM:-}" = Apple_Terminal ] && [ -t 0 ] && [ -t 1 ]; then
     fi
 fi
 
+if [ "$upgrade" = yes ]; then
+    say ""
+    say "IMPORTANT: an older MyanTerm was replaced. Terminal keeps the old font in memory until it"
+    say "restarts, so quit Terminal now (Terminal > Quit Terminal, or Command-Q) and open it again."
+    say ""
+fi
 say "Done. Burmese works in new windows that use the MyanTerm profile (Shell > New Window > MyanTerm)."
