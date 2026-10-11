@@ -8,9 +8,9 @@ macOS Terminal မှာ မြန်မာစာကို မှန်မှန
 
 ## Install
 
-1. Download `MyanTerm-1.2.zip` from [Releases](../../releases) and unzip it.
+1. Download `MyanTerm-1.2.1.zip` from [Releases](../../releases) and unzip it.
 2. Double-click `Install MyanTerm.command`. The first time, macOS may block it: right-click it, choose Open, then Open again.
-   Or, in Terminal: `cd MyanTerm-1.2 && ./install.sh`
+   Or, in Terminal: `cd MyanTerm-1.2.1 && ./install.sh`
 
 The installer:
 

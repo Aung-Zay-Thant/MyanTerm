@@ -184,6 +184,7 @@ for ch, g in sorted(by_char.items()):
         fx = (lambda x, k=k, d=CELL - GAP - k * b[2]: k * x + d - CELL)
         add(g, g, fx, CELL)
         add(g + ".l2", g, shifted(fx, -CELL), CELL)
+        add(g + ".solo", g, shifted(fx, CELL), CELL)   # ေ with nothing to attach to: stay in own cell
     elif g == "_tall_aa":
         k = fit(g, CELL - 2 * GAP)
         add(g, g, (lambda x, k=k: k * x + 110), CELL)
@@ -698,6 +699,16 @@ lookup SHIFT_MK {{
   sub @YAany @Eany @MKany @MK' by @MK_l1;
 }} SHIFT_MK;
 
+# 5. ေ or ြ with no consonant before it (typed first: Apple's Myanmar keyboard shows it as a
+#    pending character until the consonant is typed) is drawn inside its own cell. Drawn into
+#    the previous cell, Terminal would leave its ink behind when the pending character is replaced.
+lookup SOLO {{
+  ignore sub [@Cany @YAany @RAany @MKany] @E';
+  sub @E' by {P}_e.solo;
+  ignore sub [@Cany @MKany] @RA';
+  sub @RA' by @RA_r1;
+}} SOLO;
+
 feature ccmp {{
   lookup SYLLABLES;
   lookup LETTERS;
@@ -707,10 +718,11 @@ feature ccmp {{
   lookup SHIFT_C;
   lookup SHIFT_M;
   lookup SHIFT_MK;
+  lookup SOLO;
 }} ccmp;
 
 table GDEF {{
-  GlyphClassDef [@Cany @YAany @RAany @Eany @SUBSP {P}kinzi.sp], , [@MKany {P}medial_wa_ha.l1 {P}medial_wa_ha.r1 {P}medial_wa_ha.lra {P}medial_ha_u.l1 {P}medial_ha_u.r1 {P}medial_ha_u.lra {P}medial_ha_uu.l1 {P}medial_ha_uu.r1 {P}medial_ha_uu.lra], ;
+  GlyphClassDef [@Cany @YAany @RAany @Eany {P}_e.solo @SUBSP {P}kinzi.sp], , [@MKany {P}medial_wa_ha.l1 {P}medial_wa_ha.r1 {P}medial_wa_ha.lra {P}medial_ha_u.l1 {P}medial_ha_u.r1 {P}medial_ha_u.lra {P}medial_ha_uu.l1 {P}medial_ha_uu.r1 {P}medial_ha_uu.lra], ;
 }} GDEF;
 """
 open(out_path + ".fea", "w").write(fea)
@@ -753,7 +765,7 @@ style = "Bold" if "Bold" in mono_path else "Regular"
 ps = family.replace(" ", "") + "-" + style
 name = merged["name"]
 name.names = [n for n in name.names if n.nameID in (7, 8, 9, 11, 12)]
-VERSION = "1.200"
+VERSION = "1.210"
 COPYRIGHT = ("Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic, "
              "https://github.com/notofonts/myanmar). MyanTerm modifications copyright 2026 the MyanTerm authors.")
 DESCRIPTION = ("Monospace font that renders Burmese (Myanmar script) naturally in macOS Terminal.app. "
